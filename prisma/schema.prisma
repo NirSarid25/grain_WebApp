@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Conference {
+  id           String    @id @default(cuid())
+  name         String
+  date         DateTime
+  endDate      DateTime?
+  city         String
+  country      String
+  vertical     String
+  audienceSize Int
+  website      String?
+  icpScore     Float
+  tier         String
+  leads        Lead[]
+  createdAt    DateTime  @default(now())
+}
+
+model Lead {
+  id           String     @id @default(cuid())
+  conference   Conference @relation(fields: [conferenceId], references: [id])
+  conferenceId String
+  firstName    String
+  lastName     String
+  company      String
+  title        String?
+  email        String?
+  phone        String?
+  notes        String?
+  hubspotId    String?
+  contactId    String?
+  contact      Contact?   @relation(fields: [contactId], references: [id])
+  createdAt    DateTime   @default(now())
+}
+
+model Contact {
+  id            String   @id @default(cuid())
+  canonicalName String
+  email         String?  @unique
+  leads         Lead[]
+  createdAt     DateTime @default(now())
+}
+
+model Settings {
+  id                  String  @id @default("singleton")
+  anthropicApiKey     String?
+  hubspotAccessToken  String?
+}

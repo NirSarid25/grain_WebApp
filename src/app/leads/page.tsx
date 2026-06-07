@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
+import { HubSpotPushButton } from '@/components/leads/HubSpotPushButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,11 +52,7 @@ export default async function LeadsPage() {
                 <td className="px-4 py-3 text-gray-600">{l.conference.name}</td>
                 <td className="px-4 py-3 text-gray-600">{l.email ?? '—'}</td>
                 <td className="px-4 py-3">
-                  {l.hubspotId ? (
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">Synced</span>
-                  ) : (
-                    <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Pending</span>
-                  )}
+                  <HubSpotPushButton leadId={l.id} synced={!!l.hubspotId} />
                 </td>
               </tr>
             ))}

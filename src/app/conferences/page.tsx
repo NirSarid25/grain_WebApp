@@ -7,21 +7,24 @@ export const dynamic = 'force-dynamic'
 export default async function ConferencesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ vertical?: string; tier?: string; q?: string }>
+  searchParams: Promise<{ vertical?: string; tier?: string; q?: string; country?: string }>
 }) {
   const params = await searchParams
-  const { vertical, tier, q } = params
+  const { vertical, tier, q, country } = params
 
   const conferences = await prisma.conference.findMany({
     where: {
       ...(vertical ? { vertical } : {}),
       ...(tier ? { tier } : {}),
       ...(q ? { name: { contains: q } } : {}),
+      ...(country ? { country } : {}),
     },
     orderBy: { date: 'asc' },
   })
 
   const verticals = ['fintech', 'payments', 'fx', 'travel', 'treasury']
+  const allCountries = await prisma.conference.findMany({ select: { country: true }, distinct: ['country'], orderBy: { country: 'asc' } })
+  const countries = allCountries.map(c => c.country)
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -50,6 +53,10 @@ export default async function ConferencesPage({
             <option value="A">Tier A</option>
             <option value="B">Tier B</option>
             <option value="C">Tier C</option>
+          </select>
+          <select name="country" defaultValue={country ?? ''} className="border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300">
+            <option value="">All countries</option>
+            {countries.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
           <button type="submit" className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-indigo-700">Filter</button>
           <Link href="/conferences" className="text-sm text-gray-500 hover:text-gray-700 py-1.5">Clear</Link>

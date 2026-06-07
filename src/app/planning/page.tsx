@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
@@ -6,6 +7,9 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 
 export default async function PlanningPage() {
   const year = new Date().getFullYear()
+  const now = new Date()
+  const currentMonth = now.getMonth()
+
   const conferences = await prisma.conference.findMany({
     where: {
       date: {
@@ -24,21 +28,33 @@ export default async function PlanningPage() {
     byMonth[m].push(c)
   }
 
-  // Detect gaps (months with no Tier A)
+  // Tier A months
   const tierAMonths = new Set(
     conferences.filter(c => c.tier === 'A').map(c => new Date(c.date).getMonth())
   )
 
-  // Detect clusters (3+ conferences in same month)
+  // Cluster months: 3+ conferences in same month
   const clusterMonths = new Set(
     Object.entries(byMonth)
       .filter(([, confs]) => confs.length >= 3)
       .map(([m]) => parseInt(m))
   )
 
+  // Geographic cluster: 2+ conferences in same country in same month → "trip efficient"
+  const geoClusterMonths = new Set(
+    Object.entries(byMonth)
+      .filter(([, confs]) => {
+        const countryCounts: Record<string, number> = {}
+        for (const c of confs) countryCounts[c.country] = (countryCounts[c.country] ?? 0) + 1
+        return Object.values(countryCounts).some(n => n >= 2)
+      })
+      .map(([m]) => parseInt(m))
+  )
+
   const tierACount = conferences.filter(c => c.tier === 'A').length
   const tierBCount = conferences.filter(c => c.tier === 'B').length
-  const gapMonths = MONTHS.filter((_, i) => !tierAMonths.has(i) && byMonth[i].length === 0).length
+  const gapCount = MONTHS.filter((_, i) => i >= currentMonth && byMonth[i].length === 0).length
+  const upcomingGaps = MONTHS.filter((_, i) => i >= currentMonth && byMonth[i].length === 0)
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -47,12 +63,13 @@ export default async function PlanningPage() {
         <p className="text-gray-500 text-sm">{conferences.length} conferences · {tierACount} Tier A · {tierBCount} Tier B</p>
       </div>
 
-      <div className="flex gap-4 text-sm">
+      <div className="flex flex-wrap gap-4 text-sm">
         <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-green-500 inline-block" /> Tier A</div>
         <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-yellow-400 inline-block" /> Tier B</div>
         <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-gray-300 inline-block" /> Tier C</div>
         <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-100 border border-red-300 inline-block" /> Coverage gap</div>
         <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-purple-100 border border-purple-300 inline-block" /> Cluster (3+)</div>
+        <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-blue-100 border border-blue-300 inline-block" /> Trip efficient ✈</div>
       </div>
 
       <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
@@ -61,23 +78,40 @@ export default async function PlanningPage() {
           const isGap = confs.length === 0
           const isCluster = clusterMonths.has(i)
           const hasA = tierAMonths.has(i)
+          const isPast = i < currentMonth
+          const isCurrent = i === currentMonth
+          const isGeoCluster = geoClusterMonths.has(i)
+
+          // Country groupings for geo cluster tooltip
+          const countryCounts: Record<string, number> = {}
+          for (const c of confs) countryCounts[c.country] = (countryCounts[c.country] ?? 0) + 1
+          const tripOpportunities = Object.entries(countryCounts)
+            .filter(([, n]) => n >= 2)
+            .map(([country, n]) => `${n}x ${country}`)
 
           return (
             <div
               key={month}
-              className={`rounded-xl border p-3 min-h-[120px] ${
-                isGap
+              className={`rounded-xl border p-3 min-h-[130px] transition-opacity ${
+                isPast
+                  ? 'opacity-40 bg-gray-50 border-gray-100'
+                  : isGap
                   ? 'bg-red-50 border-red-200'
+                  : isGeoCluster && !isCluster
+                  ? 'bg-blue-50 border-blue-200'
                   : isCluster
                   ? 'bg-purple-50 border-purple-200'
                   : 'bg-white border-gray-200'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-gray-700">{month}</span>
-                <div className="flex gap-1">
-                  {isGap && <span className="text-xs text-red-500">gap</span>}
+                <span className={`text-sm font-semibold ${isCurrent ? 'text-indigo-700' : 'text-gray-700'}`}>
+                  {month}{isCurrent && ' ●'}
+                </span>
+                <div className="flex gap-1 flex-wrap justify-end">
+                  {isGap && !isPast && <span className="text-xs text-red-500">gap</span>}
                   {isCluster && <span className="text-xs text-purple-500">cluster</span>}
+                  {isGeoCluster && <span className="text-xs text-blue-500" title={`Trip opportunities: ${tripOpportunities.join(', ')}`}>✈ {tripOpportunities.join(', ')}</span>}
                   {hasA && !isGap && <span className="text-xs text-green-600">✓ A</span>}
                 </div>
               </div>
@@ -85,7 +119,9 @@ export default async function PlanningPage() {
                 {confs.slice(0, 3).map(c => (
                   <div key={c.id} className="flex items-center gap-1">
                     <span className={`w-2 h-2 rounded-full shrink-0 ${c.tier === 'A' ? 'bg-green-500' : c.tier === 'B' ? 'bg-yellow-400' : 'bg-gray-300'}`} />
-                    <span className="text-xs text-gray-700 truncate">{c.name}</span>
+                    <Link href={`/leads/new?conferenceId=${c.id}`} className="text-xs text-gray-700 truncate hover:text-indigo-600" title={c.name}>
+                      {c.name}
+                    </Link>
                   </div>
                 ))}
                 {confs.length > 3 && (
@@ -100,10 +136,33 @@ export default async function PlanningPage() {
         })}
       </div>
 
-      {gapMonths > 0 && (
+      {gapCount > 0 && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <p className="text-sm text-red-700 font-medium">⚠ {gapMonths} month{gapMonths !== 1 ? 's' : ''} with no conferences detected</p>
-          <p className="text-xs text-red-500 mt-1">Consider using the AI agent to discover missing events for these periods.</p>
+          <p className="text-sm text-red-700 font-medium">⚠ {gapCount} upcoming month{gapCount !== 1 ? 's' : ''} with no conferences: {upcomingGaps.join(', ')}</p>
+          <p className="text-xs text-red-500 mt-1">Use the AI agent on the dashboard to discover conferences for these gaps.</p>
+        </div>
+      )}
+
+      {geoClusterMonths.size > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <p className="text-sm text-blue-700 font-medium">✈ Trip efficiency opportunities detected</p>
+          <p className="text-xs text-blue-600 mt-1">
+            Months marked ✈ have multiple conferences in the same country — one trip can cover multiple events.
+            {Array.from(geoClusterMonths).map(m => {
+              const confs = byMonth[m]
+              const countryCounts: Record<string, string[]> = {}
+              for (const c of confs) {
+                if (!countryCounts[c.country]) countryCounts[c.country] = []
+                countryCounts[c.country].push(c.name)
+              }
+              const opportunities = Object.entries(countryCounts).filter(([, names]) => names.length >= 2)
+              return opportunities.map(([country, names]) => (
+                <span key={`${m}-${country}`} className="block mt-1">
+                  <strong>{MONTHS[m]}</strong> · {country}: {names.join(' + ')}
+                </span>
+              ))
+            })}
+          </p>
         </div>
       )}
     </div>

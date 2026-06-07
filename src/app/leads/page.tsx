@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import { HubSpotPushButton } from '@/components/leads/HubSpotPushButton'
+import { BulkHubSpotPush } from '@/components/leads/BulkHubSpotPush'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,19 +11,24 @@ export default async function LeadsPage() {
     orderBy: { createdAt: 'desc' },
   })
 
+  const pendingLeadIds = leads.filter(l => !l.hubspotId).map(l => l.id)
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Leads</h1>
-          <p className="text-gray-500 text-sm">{leads.length} captured</p>
+          <p className="text-gray-500 text-sm">{leads.length} captured · {pendingLeadIds.length} pending HubSpot sync</p>
         </div>
-        <Link
-          href="/leads/new"
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700"
-        >
-          + Capture Lead
-        </Link>
+        <div className="flex items-center gap-3">
+          <BulkHubSpotPush pendingLeadIds={pendingLeadIds} />
+          <Link
+            href="/leads/new"
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700"
+          >
+            + Capture Lead
+          </Link>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">

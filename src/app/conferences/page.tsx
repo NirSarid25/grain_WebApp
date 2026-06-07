@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { TierBadge } from '@/components/conferences/TierBadge'
+import { computeScoreBreakdown } from '@/lib/scoring'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -25,6 +26,8 @@ export default async function ConferencesPage({
   const verticals = ['fintech', 'payments', 'fx', 'travel', 'treasury']
   const allCountries = await prisma.conference.findMany({ select: { country: true }, distinct: ['country'], orderBy: { country: 'asc' } })
   const countries = allCountries.map(c => c.country)
+
+  const now = new Date()
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -72,44 +75,71 @@ export default async function ConferencesPage({
               <th className="text-left px-4 py-3 font-medium text-gray-700">Location</th>
               <th className="text-left px-4 py-3 font-medium text-gray-700">Vertical</th>
               <th className="text-left px-4 py-3 font-medium text-gray-700">Audience</th>
-              <th className="text-left px-4 py-3 font-medium text-gray-700">ICP Score</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-700">ICP Score ⓘ</th>
               <th className="text-left px-4 py-3 font-medium text-gray-700">Tier</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-700"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {conferences.map(c => (
-              <tr key={c.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 font-medium text-gray-900">
-                  {c.website ? (
-                    <a href={c.website} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 hover:underline">
-                      {c.name}
-                    </a>
-                  ) : c.name}
-                </td>
-                <td className="px-4 py-3 text-gray-600">
-                  {new Date(c.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                </td>
-                <td className="px-4 py-3 text-gray-600">{c.city}, {c.country}</td>
-                <td className="px-4 py-3">
-                  <span className="capitalize text-gray-600">{c.vertical}</span>
-                </td>
-                <td className="px-4 py-3 text-gray-600">{c.audienceSize.toLocaleString()}</td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-20 bg-gray-100 rounded-full h-1.5">
-                      <div
-                        className={`h-1.5 rounded-full ${c.icpScore >= 80 ? 'bg-green-500' : c.icpScore >= 60 ? 'bg-yellow-500' : 'bg-gray-400'}`}
-                        style={{ width: `${c.icpScore}%` }}
-                      />
+            {conferences.map(c => {
+              const breakdown = computeScoreBreakdown({ vertical: c.vertical, audienceSize: c.audienceSize, country: c.country, city: c.city })
+              const scoreTooltip = `Score breakdown:\n• Vertical (${c.vertical}): ${breakdown.vertical}/40\n• Audience (${c.audienceSize.toLocaleString()}): ${breakdown.audienceSize}/20\n• Geography (${c.city}): ${breakdown.geography}/20\n• Industry density: ${breakdown.industryDensity}/20\nTotal: ${breakdown.total}/100`
+              const happeningNow = c.endDate
+                ? now >= new Date(c.date) && now <= new Date(c.endDate)
+                : now.toDateString() === new Date(c.date).toDateString()
+              const isPast = new Date(c.endDate ?? c.date) < now
+
+              return (
+                <tr key={c.id} className={`hover:bg-gray-50 transition-colors ${isPast ? 'opacity-60' : ''}`}>
+                  <td className="px-4 py-3 font-medium text-gray-900">
+                    <div className="flex items-center gap-2">
+                      {c.website ? (
+                        <a href={c.website} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 hover:underline">
+                          {c.name}
+                        </a>
+                      ) : c.name}
+                      {happeningNow && (
+                        <span className="text-xs bg-green-500 text-white px-1.5 py-0.5 rounded-full animate-pulse">Live</span>
+                      )}
                     </div>
-                    <span className="text-xs text-gray-500">{Math.round(c.icpScore)}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <TierBadge tier={c.tier} />
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {new Date(c.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    {c.endDate && new Date(c.endDate).toDateString() !== new Date(c.date).toDateString() && (
+                      <span className="text-gray-400"> – {new Date(c.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">{c.city}, {c.country}</td>
+                  <td className="px-4 py-3">
+                    <span className="capitalize text-gray-600">{c.vertical}</span>
+                  </td>
+                  <td className="px-4 py-3 text-gray-600">{c.audienceSize.toLocaleString()}</td>
+                  <td className="px-4 py-3">
+                    <div title={scoreTooltip} className="flex items-center gap-2 cursor-help">
+                      <div className="w-20 bg-gray-100 rounded-full h-1.5">
+                        <div
+                          className={`h-1.5 rounded-full ${c.icpScore >= 80 ? 'bg-green-500' : c.icpScore >= 60 ? 'bg-yellow-500' : 'bg-gray-400'}`}
+                          style={{ width: `${c.icpScore}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-gray-500">{Math.round(c.icpScore)}</span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-0.5">{breakdown.vertical}+{breakdown.audienceSize}+{breakdown.geography}+{breakdown.industryDensity}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <TierBadge tier={c.tier} />
+                  </td>
+                  <td className="px-4 py-3">
+                    <Link
+                      href={`/leads/new?conferenceId=${c.id}`}
+                      className="text-xs text-indigo-600 hover:text-indigo-800 hover:underline whitespace-nowrap"
+                    >
+                      + Lead
+                    </Link>
+                  </td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
         {conferences.length === 0 && (

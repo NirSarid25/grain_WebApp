@@ -4,10 +4,20 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Conference } from '@/generated/prisma/client'
 
-export default function LeadCaptureForm({ conferences }: { conferences: Conference[] }) {
+export default function LeadCaptureForm({
+  conferences,
+  defaultConferenceId,
+}: {
+  conferences: Conference[]
+  defaultConferenceId?: string
+}) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const now = new Date()
+  const upcoming = conferences.filter(c => new Date(c.date) >= now).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  const past = conferences.filter(c => new Date(c.date) < now).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -23,7 +33,12 @@ export default function LeadCaptureForm({ conferences }: { conferences: Conferen
     })
 
     if (res.ok) {
-      router.push('/leads')
+      const saved = await res.json()
+      if (saved.isKnownContact && saved.contactId) {
+        router.push(`/contacts/${saved.contactId}?matched=1`)
+      } else {
+        router.push('/leads')
+      }
       router.refresh()
     } else {
       const err = await res.json()
@@ -54,12 +69,24 @@ export default function LeadCaptureForm({ conferences }: { conferences: Conferen
         <select
           name="conferenceId"
           required
+          defaultValue={defaultConferenceId ?? ''}
           className="w-full border border-gray-200 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-indigo-300 bg-white"
         >
           <option value="">Select conference…</option>
-          {conferences.map(c => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
+          {upcoming.length > 0 && (
+            <optgroup label="Upcoming">
+              {upcoming.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </optgroup>
+          )}
+          {past.length > 0 && (
+            <optgroup label="Past">
+              {past.map(c => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </optgroup>
+          )}
         </select>
       </div>
 

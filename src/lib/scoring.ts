@@ -17,6 +17,24 @@ const TIER1_COUNTRIES = new Set([
 const HIGH_DENSITY_VERTICALS = new Set(['fintech', 'payments', 'fx'])
 const MEDIUM_DENSITY_VERTICALS = new Set(['treasury', 'saas'])
 
+export interface ScoreBreakdown {
+  vertical: number
+  audienceSize: number
+  geography: number
+  industryDensity: number
+  total: number
+}
+
+export function computeScoreBreakdown(input: ScoringInput): ScoreBreakdown {
+  const v = input.vertical.toLowerCase()
+  const vertical = (v === 'fintech' || v === 'payments' || v === 'fx') ? 40 : v === 'travel' ? 30 : (v === 'treasury' || v === 'saas') ? 20 : 5
+  const audienceSize = input.audienceSize > 10000 ? 20 : input.audienceSize >= 5000 ? 15 : input.audienceSize >= 1000 ? 10 : 5
+  const geography = (TIER1_HUBS.has(input.city) || TIER1_COUNTRIES.has(input.country)) ? 20 : (['Poland', 'Austria', 'Denmark', 'Cyprus', 'Thailand', 'Spain'].includes(input.country)) ? 12 : 5
+  const vert = input.vertical.toLowerCase()
+  const industryDensity = HIGH_DENSITY_VERTICALS.has(vert) ? 20 : MEDIUM_DENSITY_VERTICALS.has(vert) ? 12 : 5
+  return { vertical, audienceSize, geography, industryDensity, total: Math.min(100, vertical + audienceSize + geography + industryDensity) }
+}
+
 export function computeScore(input: ScoringInput): number {
   let score = 0
 

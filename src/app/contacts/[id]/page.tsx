@@ -2,12 +2,24 @@ import { prisma } from '@/lib/prisma'
 import { classifyRelationship } from '@/lib/matching'
 import { RelationshipBadge } from '@/components/contacts/RelationshipBadge'
 import ArcSummary from '@/components/contacts/ArcSummary'
+import MatchBanner from '@/components/contacts/MatchBanner'
 import { notFound } from 'next/navigation'
+
+// Inline client component for follow-up drafter
+import FollowUpDrafter from '@/components/contacts/FollowUpDrafter'
 
 export const dynamic = 'force-dynamic'
 
-export default async function ContactDetailPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function ContactDetailPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ matched?: string }>
+}) {
   const { id } = await params
+  const { matched } = await searchParams
+
   const contact = await prisma.contact.findUnique({
     where: { id },
     include: {
@@ -25,11 +37,16 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
+      {matched === '1' && contact.leads.length > 1 && (
+        <MatchBanner name={contact.canonicalName} previousConference={contact.leads[contact.leads.length - 2].conference.name} />
+      )}
+
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">{contact.canonicalName}</h1>
           <p className="text-gray-500 text-sm">{companies.join(' → ')}</p>
           {contact.email && <p className="text-sm text-indigo-600 mt-0.5">{contact.email}</p>}
+          <p className="text-xs text-gray-400 mt-1">{contact.leads.length} conference appearance{contact.leads.length !== 1 ? 's' : ''}</p>
         </div>
         <RelationshipBadge label={rel} />
       </div>
@@ -47,7 +64,7 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
               <div className="flex-1 pb-4">
                 <div className="flex items-center justify-between">
                   <p className="font-medium text-sm text-gray-900">{lead.conference.name}</p>
-                  <p className="text-xs text-gray-500">{new Date(lead.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                  <p className="text-xs text-gray-500">{new Date(lead.conference.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                 </div>
                 {lead.title && <p className="text-xs text-gray-500">{lead.title} at {lead.company}</p>}
                 {lead.notes && <p className="text-sm text-gray-600 mt-1 italic">"{lead.notes}"</p>}
@@ -88,6 +105,3 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
     </div>
   )
 }
-
-// Inline client component for follow-up drafter
-import FollowUpDrafter from '@/components/contacts/FollowUpDrafter'

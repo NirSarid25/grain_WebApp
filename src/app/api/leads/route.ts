@@ -20,6 +20,10 @@ export async function POST(req: Request) {
 
   const contactId = await matchOrCreateContact({ firstName, lastName, company, email: email || null })
 
+  const existingLeadCount = contactId
+    ? await prisma.lead.count({ where: { contactId } })
+    : 0
+
   const lead = await prisma.lead.create({
     data: {
       conferenceId,
@@ -35,5 +39,8 @@ export async function POST(req: Request) {
     include: { conference: true, contact: true },
   })
 
-  return NextResponse.json(lead, { status: 201 })
+  return NextResponse.json(
+    { ...lead, isKnownContact: existingLeadCount > 0 },
+    { status: 201 }
+  )
 }

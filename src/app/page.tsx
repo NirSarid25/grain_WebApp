@@ -45,28 +45,44 @@ export default async function DashboardPage() {
   })
 
   const stats = [
-    { label: 'Conferences', value: confCount, icon: Calendar, href: '/conferences', color: 'text-indigo-600 bg-indigo-50' },
-    { label: 'Tier A Events', value: tierA, icon: TrendingUp, href: '/conferences?tier=A', color: 'text-green-600 bg-green-50' },
-    { label: 'Leads Captured', value: leadCount, icon: Users, href: '/leads', color: 'text-blue-600 bg-blue-50' },
-    { label: 'Unique Contacts', value: contactCount, icon: UserCheck, href: '/contacts', color: 'text-purple-600 bg-purple-50' },
+    { label: 'Conferences', value: confCount, icon: Calendar, href: '/conferences', accent: 'from-indigo-500 to-violet-600' },
+    { label: 'Tier A Events', value: tierA, icon: TrendingUp, href: '/conferences?tier=A', accent: 'from-amber-400 to-orange-500' },
+    { label: 'Leads Captured', value: leadCount, icon: Users, href: '/leads', accent: 'from-sky-400 to-blue-600' },
+    { label: 'Unique Contacts', value: contactCount, icon: UserCheck, href: '/contacts', accent: 'from-violet-500 to-purple-600' },
   ]
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Conference Intelligence</h1>
-        <p className="text-gray-500 mt-1">Grain sales team · FX/fintech conference hub</p>
+      {/* Hero banner */}
+      <div className="rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 p-7 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 70% 50%, #6366f1 0%, transparent 60%)' }} />
+        <div className="relative">
+          <p className="text-indigo-300 text-xs font-semibold tracking-widest uppercase mb-2">Grain Sales Intelligence</p>
+          <h1 className="text-3xl font-bold tracking-tight">Conference Command Center</h1>
+          <p className="text-indigo-200 mt-2 text-sm max-w-lg">
+            ICP-scored conferences, relationship tracking across events, and AI-powered follow-up — all in one place for your fintech and payments pipeline.
+          </p>
+          <div className="flex gap-3 mt-5">
+            <Link href="/conferences" className="bg-white text-indigo-900 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition-colors">
+              Browse Conferences
+            </Link>
+            <Link href="/leads/new" className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-500 border border-indigo-500 transition-colors">
+              + Capture Lead
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {stats.map(({ label, value, icon: Icon, href, color }) => (
-          <Link key={label} href={href} className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-sm transition-shadow">
-            <div className={`inline-flex p-2 rounded-lg ${color} mb-3`}>
-              <Icon className="w-5 h-5" />
+        {stats.map(({ label, value, icon: Icon, href, accent }) => (
+          <Link key={label} href={href} className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-all group overflow-hidden relative">
+            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${accent}`} />
+            <div className={`inline-flex p-2 rounded-lg bg-gradient-to-br ${accent} mb-3 mt-1`}>
+              <Icon className="w-5 h-5 text-white" />
             </div>
-            <p className="text-2xl font-bold text-gray-900">{value}</p>
-            <p className="text-sm text-gray-500">{label}</p>
+            <p className="text-3xl font-bold text-gray-900">{value}</p>
+            <p className="text-sm text-gray-500 mt-0.5">{label}</p>
           </Link>
         ))}
       </div>

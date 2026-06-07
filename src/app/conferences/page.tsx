@@ -116,13 +116,13 @@ export default async function ConferencesPage({
                   <td className="px-4 py-3 text-gray-600">{c.audienceSize.toLocaleString()}</td>
                   <td className="px-4 py-3">
                     <div title={scoreTooltip} className="flex items-center gap-2 cursor-help">
-                      <div className="w-20 bg-gray-100 rounded-full h-1.5">
+                      <div className="w-20 bg-gray-100 rounded-full h-2">
                         <div
-                          className={`h-1.5 rounded-full ${c.icpScore >= 80 ? 'bg-green-500' : c.icpScore >= 60 ? 'bg-yellow-500' : 'bg-gray-400'}`}
+                          className={`h-2 rounded-full ${c.icpScore >= 80 ? 'bg-gradient-to-r from-amber-400 to-orange-500' : c.icpScore >= 60 ? 'bg-gradient-to-r from-sky-400 to-blue-500' : 'bg-gray-300'}`}
                           style={{ width: `${c.icpScore}%` }}
                         />
                       </div>
-                      <span className="text-xs text-gray-500">{Math.round(c.icpScore)}</span>
+                      <span className={`text-xs font-semibold ${c.icpScore >= 80 ? 'text-orange-600' : c.icpScore >= 60 ? 'text-blue-600' : 'text-gray-400'}`}>{Math.round(c.icpScore)}</span>
                     </div>
                     <p className="text-xs text-gray-400 mt-0.5">{breakdown.vertical}+{breakdown.audienceSize}+{breakdown.geography}+{breakdown.industryDensity}</p>
                   </td>

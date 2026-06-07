@@ -82,3 +82,24 @@ export function classifyRelationship(leads: {
   if (leads.length >= 2) return 'Warming'
   return 'New'
 }
+
+export function explainRelationship(leads: {
+  title?: string | null
+  email?: string | null
+  createdAt: Date
+}[]): string {
+  if (leads.length === 0) return 'First encounter'
+
+  const sorted = [...leads].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+  const lastSeen = sorted[sorted.length - 1].createdAt
+  const months = Math.round((Date.now() - lastSeen.getTime()) / (1000 * 60 * 60 * 24 * 30))
+  const hasEmail = leads.some(l => l.email)
+  const isSenior = leads.some(l => l.title && SENIOR_TITLES.test(l.title))
+  const timeAgo = months === 0 ? 'this month' : months === 1 ? '1 month ago' : `${months} months ago`
+
+  if (hasEmail && isSenior && months < 3) return `Senior contact with email · last seen ${timeAgo} → follow up now`
+  if (leads.length >= 3 && !hasEmail) return `${leads.length} events, no email collected → likely not a buyer`
+  if (leads.length >= 2 && months > 6) return `${leads.length} events · last seen ${timeAgo} → re-engage or drop`
+  if (leads.length >= 2) return `${leads.length} events · last seen ${timeAgo} · relationship building`
+  return `First captured ${timeAgo}`
+}

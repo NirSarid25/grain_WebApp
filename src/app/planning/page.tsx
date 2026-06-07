@@ -55,6 +55,12 @@ export default async function PlanningPage() {
   const tierBCount = conferences.filter(c => c.tier === 'B').length
   const gapCount = MONTHS.filter((_, i) => i >= currentMonth && byMonth[i].length === 0).length
   const upcomingGaps = MONTHS.filter((_, i) => i >= currentMonth && byMonth[i].length === 0)
+  // Under-invested = has events but no Tier A presence
+  const underInvestedMonths = new Set(
+    Object.entries(byMonth)
+      .filter(([m, confs]) => confs.length > 0 && !tierAMonths.has(parseInt(m)) && parseInt(m) >= currentMonth)
+      .map(([m]) => parseInt(m))
+  )
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -67,7 +73,8 @@ export default async function PlanningPage() {
         <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-green-500 inline-block" /> Tier A</div>
         <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-yellow-400 inline-block" /> Tier B</div>
         <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-gray-300 inline-block" /> Tier C</div>
-        <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-100 border border-red-300 inline-block" /> Coverage gap</div>
+        <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-red-100 border border-red-300 inline-block" /> No events (gap)</div>
+        <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-orange-100 border border-orange-300 inline-block" /> Under-invested (no Tier A)</div>
         <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-purple-100 border border-purple-300 inline-block" /> Cluster (3+)</div>
         <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-blue-100 border border-blue-300 inline-block" /> Trip efficient ✈</div>
       </div>
@@ -81,6 +88,7 @@ export default async function PlanningPage() {
           const isPast = i < currentMonth
           const isCurrent = i === currentMonth
           const isGeoCluster = geoClusterMonths.has(i)
+          const isUnderInvested = underInvestedMonths.has(i)
 
           // Country groupings for geo cluster tooltip
           const countryCounts: Record<string, number> = {}
@@ -97,6 +105,8 @@ export default async function PlanningPage() {
                   ? 'opacity-40 bg-gray-50 border-gray-100'
                   : isGap
                   ? 'bg-red-50 border-red-200'
+                  : isUnderInvested
+                  ? 'bg-orange-50 border-orange-200'
                   : isGeoCluster && !isCluster
                   ? 'bg-blue-50 border-blue-200'
                   : isCluster
@@ -110,6 +120,7 @@ export default async function PlanningPage() {
                 </span>
                 <div className="flex gap-1 flex-wrap justify-end">
                   {isGap && !isPast && <span className="text-xs text-red-500">gap</span>}
+                  {isUnderInvested && <span className="text-xs text-orange-500">no Tier A</span>}
                   {isCluster && <span className="text-xs text-purple-500">cluster</span>}
                   {isGeoCluster && <span className="text-xs text-blue-500" title={`Trip opportunities: ${tripOpportunities.join(', ')}`}>✈ {tripOpportunities.join(', ')}</span>}
                   {hasA && !isGap && <span className="text-xs text-green-600">✓ A</span>}
@@ -140,6 +151,13 @@ export default async function PlanningPage() {
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <p className="text-sm text-red-700 font-medium">⚠ {gapCount} upcoming month{gapCount !== 1 ? 's' : ''} with no conferences: {upcomingGaps.join(', ')}</p>
           <p className="text-xs text-red-500 mt-1">Use the AI agent on the dashboard to discover conferences for these gaps.</p>
+        </div>
+      )}
+
+      {underInvestedMonths.size > 0 && (
+        <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+          <p className="text-sm text-orange-700 font-medium">⚡ {underInvestedMonths.size} upcoming month{underInvestedMonths.size !== 1 ? 's' : ''} under-invested — events exist but no Tier A presence: {Array.from(underInvestedMonths).map(m => MONTHS[m]).join(', ')}</p>
+          <p className="text-xs text-orange-600 mt-1">Consider whether these months warrant a Tier A event or can be de-prioritized.</p>
         </div>
       )}
 

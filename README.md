@@ -1,6 +1,6 @@
 # Grain Conference Intelligence Tool
 
-A full-stack web app that helps Grain's sales team decide which conferences to attend, plan year-round coverage, capture leads in the field, track cross-conference relationships, and sync to HubSpot — all powered by Claude AI.
+A full-stack web app that helps Grain's sales team decide which conferences to attend, plan year-round coverage, capture leads in the field, track cross-conference relationships, and sync everything to HubSpot — all powered by Claude AI.
 
 **Live Web Application:** https://grainwebapp-production.up.railway.app       
 
@@ -12,21 +12,46 @@ A full-stack web app that helps Grain's sales team decide which conferences to a
 
 ## Table of Contents
 
-1. [What the App Does](#what-the-app-does)
-2. [Pages & Features](#pages--features)
-3. [Enabling AI Features (for Grain)](#enabling-ai-features-for-grain)
-4. [Enabling HubSpot Sync (for Grain)](#enabling-hubspot-sync-for-grain)
-5. [ICP Scoring System](#icp-scoring-system)
-6. [Cross-Conference Contact Tracking](#cross-conference-contact-tracking)
-7. [AI Agent Architecture](#ai-agent-architecture)
-8. [Running Locally](#running-locally)
-9. [Tech Stack](#tech-stack)
+1. [For Grain Reviewers — Start Here](#for-grain-reviewers--start-here)
+2. [What the App Does](#what-the-app-does)
+3. [Pages & Features](#pages--features)
+4. [ICP Scoring System](#icp-scoring-system)
+5. [Cross-Conference Contact Tracking](#cross-conference-contact-tracking)
+6. [AI Agent Architecture](#ai-agent-architecture)
+7. [Running Locally](#running-locally)
+8. [Tech Stack](#tech-stack)
+
+---
+
+## For Grain Reviewers — Start Here
+
+The app is live and fully deployed. Before exploring, do these two things so the AI features and HubSpot sync actually work:
+
+### Step 1 — Enable AI features
+
+1. Open the live app: https://grainwebapp-production.up.railway.app
+2. Click **Settings** in the left sidebar
+3. Paste your Anthropic API key (starts with `sk-ant-...`) in the **Anthropic API Key** field
+4. Click **Save**
+
+That's it. All AI features — the relationship arc summaries, follow-up email drafts, conference discovery chat — activate immediately. No restart needed.
+
+### Step 2 — Enable HubSpot sync (optional)
+
+1. In HubSpot, go to **Settings → Integrations → Private Apps** and create a private app with `crm.objects.contacts.write` scope
+2. Copy the access token
+3. Back in the app, go to **Settings** and paste it in the **HubSpot Access Token** field
+4. Click **Save**
+
+Once saved, every lead on the Leads page gets a "Push to HubSpot" button, and a bulk push button appears at the top.
+
+> If you prefer to use an environment variable instead of the Settings page, add `ANTHROPIC_API_KEY=sk-ant-...` in Railway → grain_WebApp → Variables tab and redeploy. The app falls back to that if no key is saved in Settings.
 
 ---
 
 ## What the App Does
 
-Grain's sales team attends 20–30 fintech and payments conferences per year. Today, decisions about which events to attend, who covers what, and how leads are followed up are fragmented across spreadsheets and Slack threads.
+Grain's sales team attends 20–30 fintech and payments conferences per year. Today, decisions about which events to attend, who covers what, and how leads are followed up are scattered across spreadsheets and Slack threads.
 
 This tool centralizes everything:
 
@@ -35,24 +60,27 @@ This tool centralizes everything:
 | Which conferences should we attend? | ICP scoring ranks all 30 events A/B/C automatically |
 | Are we missing months with no coverage? | Planning view flags gaps and under-invested months |
 | Multiple events close together — one trip? | Geographic cluster detection highlights trip efficiency |
-| Capturing leads quickly on a busy show floor | Mobile-first lead capture, pre-selected conference, 5 taps to save |
-| Met this person before — who are they to us? | Cross-conference contact deduplication with relationship classification |
+| Capturing leads quickly on a busy show floor | Mobile-first lead capture, pre-selected conference, minimal taps to save |
+| Met this person before — who are they to us? | Cross-conference deduplication with automatic relationship classification |
 | What do I say in the follow-up email? | AI drafts a personalized email based on your field notes |
-| Push contacts into HubSpot | One-click or bulk push with field mapping |
+| Push contacts into HubSpot | One-click or bulk push with custom field mapping |
 
 ---
 
 ## Pages & Features
 
 ### Dashboard
-The main command center. Shows:
-- **Stats**: total conferences, Tier A events, leads captured, unique contacts
-- **Next 30 Days**: upcoming conferences with tier badges and quick-capture links
-- **Contacts to Act On**: Hot and Warming contacts sorted by urgency
-- **Recent Captures**: last 5 leads added
-- **AI Chat**: ask natural-language questions about your conference pipeline
+
+The main command center. When you land here you see:
+
+- **4 stats at the top** — total conferences, Tier A events, leads captured, unique contacts
+- **Next 30 Days** — upcoming conferences with tier badges and quick-capture links, so nothing sneaks up on the team
+- **Contacts to Act On** — Hot and Warming contacts sorted by urgency, so you always know who needs a follow-up right now
+- **Recent Captures** — last 5 leads added
+- **AI Chat** — ask anything in plain English about your conference pipeline (more on this below)
 
 ### Conferences
+
 Full list of 30 pre-seeded real-world fintech, payments, FX, travel, and treasury conferences.
 
 **Filters:**
@@ -62,124 +90,95 @@ Full list of 30 pre-seeded real-world fintech, payments, FX, travel, and treasur
 - Filter by country
 
 **Each row shows:**
-- Conference name (linked to website)
+- Conference name linked to its official website
 - Date range
 - City and country
 - Vertical
 - Audience size
-- ICP score with gradient bar and 4-component breakdown (hover for full tooltip)
-- Tier badge (★ Tier A, ◆ Tier B, Tier C)
-- **"+ Lead"** quick-capture button → opens lead form pre-filled with that conference
+- ICP score — a gradient bar with the numeric score and the 4-component breakdown underneath (hover the bar for a full tooltip explaining each factor)
+- Tier badge — ★ Tier A, ◆ Tier B, Tier C
+- **"+ Lead"** quick-capture button — opens the lead form pre-filled with that conference
 
-**Live badge:** Conferences happening today show a pulsing "Live" indicator.  
-**Past events:** Dimmed automatically.
+**Live badge:** Conferences happening today show a pulsing green "Live" indicator.  
+**Past events:** Dimmed automatically so the list stays clean.
 
 ### Planning
-Year-view calendar showing all 12 months of conference coverage.
+
+A year-view calendar showing all 12 months of conference coverage at a glance.
 
 **Color coding:**
-- ⬜ White — good coverage with Tier A present
-- 🟠 Orange — events exist but no Tier A (under-invested)
-- 🔴 Red — no events at all (gap)
-- 🟣 Purple — cluster month (3+ conferences)
-- 🔵 Blue — trip-efficient month (2+ conferences in same country → one trip covers multiple events)
+- ⬜ White — good coverage, at least one Tier A event this month
+- 🟠 Orange — events exist but no Tier A present (under-invested month)
+- 🔴 Red — nothing booked at all (gap month)
+- 🟣 Purple — cluster month (3 or more conferences)
+- 🔵 Blue — trip-efficient month (2+ conferences in the same country — one trip covers both)
 
-**Summary panels** at the bottom name specific months with gaps and trip opportunities.  
-**Conference names are clickable** → goes directly to lead capture for that event.
+**Summary panels** at the bottom of the page name the specific months with gaps and the specific conference pairs worth combining into a single trip.
+
+Conference names inside each month cell are clickable and go straight to the lead capture form for that event.
 
 ### Leads
-Full list of all captured leads with company, title, conference, email, and HubSpot sync status.
 
-- **Individual push**: "Push to HubSpot" button per lead
-- **Bulk push**: "Push all to HubSpot (N pending)" button at the top — syncs all unsynced leads at once
-- Lead names link to the contact's profile page
+Full list of all captured leads — name, company, title, conference, email, and HubSpot sync status.
+
+- **Individual push** — "Push to HubSpot" button on every row
+- **Bulk push** — "Push all to HubSpot (N pending)" button at the top syncs everything unsynced in one click
+- Lead names link directly to the contact's full profile page
+
+**Fields mapped to HubSpot:** first name, last name, email, phone, job title, company, plus two custom Grain properties — `grain_conference` (which event they were met at) and `grain_notes` (field notes from the rep).
 
 ### Capture Lead
-Mobile-optimized lead capture form — designed for one-handed use on a conference floor.
 
-- **Upcoming conferences appear first** in the dropdown (grouped separately from past events)
-- **Pre-selected** when arriving via a "+" button from the conferences or planning page
+A mobile-optimized form designed for one-handed use on a busy conference floor.
+
+- **Upcoming conferences appear first** in the dropdown, grouped separately from past events
+- **Conference is pre-selected** when you arrive here via a "+ Lead" button from the Conferences or Planning page
 - Required fields: first name, last name, company, conference
 - Optional: title, email, phone, notes
-- On save: if the person is already in the system (matched by email or name), you are automatically redirected to their contact profile with a "Match found!" banner
+
+**Smart deduplication on save:** When you hit Save, the app checks whether this person already exists in the system. If it finds a match — by email, or by fuzzy name matching when there's no email — instead of creating a duplicate, you're automatically redirected to the existing contact's profile with a **"Match found!"** banner telling you which conference you first met them at. The rep on the floor never has to think about duplicates.
 
 ### Contacts
-All unique contacts discovered across conferences, sorted by urgency.
 
-**Sort order:** Hot → Warming → New → Stalled → Tire-kicker  
+All unique contacts discovered across conferences, sorted by urgency so the most important people are always at the top.
 
-**Columns:**
-- Name + email
-- Company (shows `Company A → Company B` with **↺ job change** flag if they switched employers between events)
-- Times seen + last conference
-- **Signal** — plain-English explanation of why they got their status (e.g. *"Senior contact with email · last seen 2 months ago → follow up now"*)
+**Sort order:** Hot → Warming → New → Stalled → Tire-kicker
+
+**What you see for each contact:**
+- Name and email
+- Company history — if they switched employers between events, you see `Company A → Company B` with a **↺ job change** flag. That's a buying signal: a new company usually means they're re-evaluating vendors.
+- How many times you've seen them and at which conference last
+- **Signal** — a plain-English sentence explaining why they got their status, like *"Senior contact with email · last seen 2 months ago → follow up now"*
 - Relationship status badge
 
-**Hot contacts alert banner** appears at the top when any Hot contacts exist.
+A **Hot contacts alert banner** appears at the top of the page when there are any Hot contacts that need attention.
 
 ### Contact Detail
-Full relationship profile for a single contact.
 
-- **"Match found!" banner** if you were redirected here after recognizing a known contact
-- Appearance count + company history
-- Relationship badge (Hot / Warming / Stalled / Tire-kicker / New)
-- **Conference timeline** — every event where this person was encountered, with their notes, title, and company at the time
-- **AI Relationship Arc** — Claude summarizes the entire cross-conference history into 2–3 sentences and gives a recommendation: *Ready to close / Nurture / Deprioritize*
-- **Draft Follow-up Emails** — one AI-drafted email per conference appearance, editable before copying
+The full relationship profile for a single contact.
+
+- **"Match found!" banner** at the top if you were redirected here after the system recognized a returning contact
+- Name, company history, email, appearance count, and relationship badge
+- **Conference timeline** — every event where this person was seen, in chronological order, with the notes your rep took, their title at the time, and which company they were with
+- **AI Relationship Arc** — Claude reads all the field notes across all appearances and synthesizes them into 2–3 sentences, then gives a concrete recommendation: *Ready to close*, *Nurture*, or *Deprioritize*. What would take a rep 10 minutes of digging takes 3 seconds here.
+- **Draft Follow-up Emails** — one AI-drafted personalized email per conference appearance, using the person's title, the event name, and the rep's actual field notes. Fully editable before you copy it.
 
 ### Settings
-Configure API keys — no code changes or redeployment needed.
 
-| Field | Purpose |
-|-------|---------|
-| Anthropic API Key | Enables all AI features (arc summaries, email drafts, conference discovery, AI chat) |
-| HubSpot Access Token | Enables lead push to HubSpot CRM |
+Where Grain's team configures the two integrations — no code changes or redeployment ever needed.
 
-Keys are stored in the database and take effect immediately after saving.
+| Field | What it unlocks |
+|-------|----------------|
+| Anthropic API Key | All AI features — arc summaries, email drafts, conference discovery chat |
+| HubSpot Access Token | Lead push to HubSpot CRM, individual and bulk |
 
----
-
-## Enabling AI Features (for Grain)
-
-The app has a Settings page that accepts an Anthropic API key at runtime — no code changes or redeployment needed.
-
-### Option A — Settings page (recommended)
-
-1. Open the live app at https://grainwebapp-production.up.railway.app
-2. Click **Settings** in the left sidebar
-3. Paste your `ANTHROPIC_API_KEY` (starts with `sk-ant-...`)
-4. Click **Save**
-5. AI features activate immediately — no restart needed
-
-### Option B — Environment variable
-
-In Railway → grain_WebApp service → Variables tab, add:
-
-```
-ANTHROPIC_API_KEY=sk-ant-...
-```
-
-Save and Railway will redeploy automatically. The app reads this variable if no key is stored via the Settings page.
-
----
-
-## Enabling HubSpot Sync (for Grain)
-
-1. In HubSpot, go to **Settings → Integrations → Private Apps** and create a private app with `crm.objects.contacts.write` scope
-2. Copy the access token
-3. In the app, go to **Settings** and paste it in the **HubSpot Access Token** field
-4. Click **Save**
-5. Go to **Leads** — each row now has a "Push to HubSpot" button, or use "Push all to HubSpot" to sync everything at once
-
-**Fields mapped to HubSpot:**
-- First name, last name, email, phone, job title, company
-- Custom properties: `grain_conference` (which event they were met at), `grain_notes` (field notes)
+Keys are saved in the database and take effect immediately after clicking Save.
 
 ---
 
 ## ICP Scoring System
 
-Every conference is scored 0–100 across 4 factors, then assigned a tier:
+Every conference is scored 0–100 across 4 factors, then assigned a tier automatically.
 
 | Factor | Max Points | Breakdown |
 |--------|-----------|-----------|
@@ -193,7 +192,7 @@ Every conference is scored 0–100 across 4 factors, then assigned a tier:
 - **Tier B** (◆) — score 60–79 — selective attendance
 - **Tier C** — score < 60 — monitor only
 
-The score breakdown (e.g. `40+20+20+20`) is visible on every conference row. Hover the score bar for the full breakdown tooltip.
+The score breakdown (e.g. `40+20+20+20`) is shown under every conference row. Hover the score bar for the full breakdown tooltip.
 
 ---
 
@@ -201,40 +200,40 @@ The score breakdown (e.g. `40+20+20+20`) is visible on every conference row. Hov
 
 When a lead is saved, the app automatically tries to match them to an existing contact using a two-step algorithm:
 
-**Step 1 — Email match (primary key)**  
+**Step 1 — Email match**  
 If the email matches an existing contact exactly → link to that contact.
 
-**Step 2 — Fuzzy name + company match**  
-If no email, use Levenshtein distance (≤2 edits) on the full name, confirmed by company similarity → link to that contact.
+**Step 2 — Fuzzy name match**  
+If there's no email, use Levenshtein distance (≤2 character edits) on the full name, confirmed by company similarity → link to that contact. This handles typos, middle names, and shortened first names.
 
-**If no match** → create a new contact.
+**If no match is found** → a new contact is created.
 
 ### Relationship Classification
 
-| Status | Criteria |
-|--------|----------|
-| 🔥 Hot | Has email + senior title (VP/Director/C-level) + seen in last 3 months |
-| 📈 Warming | 2+ appearances, seen within 6 months |
-| ⏸️ Stalled | 2+ appearances, last seen >6 months ago |
-| 👀 Tire-kicker | 3+ appearances, no email ever collected |
+Once contacts are linked across events, each one gets a status based on real engagement signals:
+
+| Status | What it means |
+|--------|--------------|
+| 🔥 Hot | Has email + senior title (VP/Director/C-level) + seen in the last 3 months |
+| 📈 Warming | Seen at 2+ events, last appearance within 6 months |
+| ⏸️ Stalled | Seen at 2+ events, but last appearance was more than 6 months ago |
+| 👀 Tire-kicker | Seen at 3+ events but never gave an email |
 | ✨ New | First encounter |
 
-**Edge cases handled:**
-- **Name variations**: Levenshtein allows up to 2 character differences (typos, middle names, shortened names)
-- **Job changes**: If the same contact appears with a different company across events, the company history is shown as `Company A → Company B` with an explicit `↺ job change` flag — a buying signal (new company = re-evaluating vendors)
-- **Match notification**: When a lead save matches an existing contact, the rep is automatically redirected to the contact profile with a "Match found!" banner showing which conference they first met this person at
+**Job change detection:** If the same contact appears with a different company at a later event, their profile shows `Company A → Company B` with an explicit ↺ flag. A job change is a buying signal — new company usually means a fresh vendor evaluation.
 
 ---
 
 ## AI Agent Architecture
 
-The app uses a 4-skill lifecycle model built on Claude (`claude-sonnet-4-6`):
+The app uses a 4-skill lifecycle model built on Claude (`claude-sonnet-4-6`). It's not just a chatbot — there's an orchestrator that reads every question and decides which specialized agent should handle it.
 
 ```
 ┌─────────────────────────────────┐
 │         ORCHESTRATOR            │
-│   Natural-language router       │
-│   Classifies query phase        │
+│   Reads your question,          │
+│   classifies the phase,         │
+│   routes to the right agent     │
 └────────┬────────────────────────┘
          │
    ┌─────┼──────────┐
@@ -243,18 +242,18 @@ The app uses a 4-skill lifecycle model built on Claude (`claude-sonnet-4-6`):
 Agent  Agent     Agent
 ```
 
-| Skill | When | What it does |
-|-------|------|--------------|
-| **Orchestrator** | AI chat on dashboard | Receives free-text questions, detects whether they're pre/in/post conference, routes to the right agent |
-| **Pre-conference** | Before an event | Discovers conferences the team doesn't know about yet, based on ICP criteria |
-| **In-conference** | On the show floor | (API available — real-time contact lookup) |
-| **Post-conference** | After an event | Generates relationship arc summaries + drafts personalized follow-up emails |
+| Agent | When it activates | What it does |
+|-------|------------------|--------------|
+| **Orchestrator** | Every AI chat message | Classifies whether the question is pre/in/post conference and routes it |
+| **Pre-conference** | Planning questions | Discovers conferences the team doesn't know about yet, based on ICP criteria and geography |
+| **In-conference** | Show floor questions | Real-time contact lookup |
+| **Post-conference** | Follow-up questions | Generates relationship arc summaries and drafts personalized follow-up emails |
 
-### Why AI for these specific jobs?
+### Why use AI for these specific jobs?
 
-- **Relationship arc summary**: A rep might have 3–4 sparse field notes from different events spread over 18 months. Synthesizing those into a coherent narrative + close/nurture/drop recommendation takes 10 minutes manually. Claude does it in 3 seconds.
-- **Follow-up email draft**: Personalizing an email to reference the specific conference, the person's title, and the rep's notes is the job AI is best suited for — it's pattern-completion with personal context.
-- **Conference discovery**: Claude's training data includes hundreds of industry events the seed database doesn't cover. Asking it to suggest conferences by vertical + geography + time window produces genuinely useful results a Google search would take 30 minutes to replicate.
+- **Relationship arc summary** — A rep might have 3–4 sparse field notes spread across 18 months of events. Turning those into a coherent story with a close/nurture/drop recommendation takes 10 minutes manually. Claude does it in 3 seconds.
+- **Follow-up email draft** — Writing a personalized email that references the specific conference, the person's title, and the rep's exact notes is exactly what AI is good at. It's not generic — it uses the real data.
+- **Conference discovery** — Claude's training data includes hundreds of industry events that aren't in the seed database. Asking it to suggest conferences by vertical, geography, and time window gives you genuinely useful results that a Google search would take 30 minutes to replicate.
 
 ---
 
@@ -310,8 +309,8 @@ Open [http://localhost:3000](http://localhost:3000).
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Next.js 16.2 (App Router, server components, API routes) |
-| Database | SQLite via Prisma 7 + libsql adapter |
+| Framework | Next.js (App Router, server components, API routes) |
+| Database | SQLite via Prisma + libsql adapter |
 | Styling | Tailwind CSS v4 |
 | AI | Anthropic SDK — Claude claude-sonnet-4-6 |
 | Deployment | Railway (auto-deploy from GitHub) |

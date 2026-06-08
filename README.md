@@ -18,8 +18,10 @@ A full-stack web app that helps Grain's sales team decide which conferences to a
 4. [ICP Scoring System](#icp-scoring-system)
 5. [Cross-Conference Contact Tracking](#cross-conference-contact-tracking)
 6. [AI Agent Architecture](#ai-agent-architecture)
-7. [Running Locally](#running-locally)
-8. [Tech Stack](#tech-stack)
+7. [How I Built This With AI](#how-i-built-this-with-ai)
+8. [What I'd Build Next](#what-id-build-next)
+9. [Running Locally](#running-locally)
+10. [Tech Stack](#tech-stack)
 
 ---
 
@@ -254,6 +256,26 @@ Agent  Agent     Agent
 - **Relationship arc summary** — A rep might have 3–4 sparse field notes spread across 18 months of events. Turning those into a coherent story with a close/nurture/drop recommendation takes 10 minutes manually. Claude does it in 3 seconds.
 - **Follow-up email draft** — Writing a personalized email that references the specific conference, the person's title, and the rep's exact notes is exactly what AI is good at. It's not generic — it uses the real data.
 - **Conference discovery** — Claude's training data includes hundreds of industry events that aren't in the seed database. Asking it to suggest conferences by vertical, geography, and time window gives you genuinely useful results that a Google search would take 30 minutes to replicate.
+
+---
+
+## How I Built This With AI
+
+This entire app was built using Claude Code — Anthropic's AI coding tool. It helped me move fast: scaffolding the full Next.js app, writing the database schema, implementing the Levenshtein matching algorithm, and drafting the AI prompts that power the relationship arc and email features.
+
+Where it helped most was speed. What would normally take a developer a few weeks, I built in days.
+
+Where I had to stay sharp was direction. AI writes what you ask for — if your thinking isn't clear, neither is the output. The tool amplifies your decisions, it doesn't replace them. Every product decision in this app — the ICP scoring weights, the deduplication threshold, the relationship classification criteria, the agent architecture — was a deliberate choice that I had to think through and communicate clearly before the code could reflect it.
+
+---
+
+## What I'd Build Next
+
+If I had another week, three things:
+
+1. **Team coverage view** — a way for managers to see which rep is covering which conference and avoid overlap. Right now the planning page shows the calendar but not who owns each event.
+2. **HubSpot two-way sync** — before pushing a lead, check if they already exist in HubSpot by email and update instead of creating a duplicate. The current version always creates a new contact.
+3. **Voice capture on the floor** — right now you tap to fill the form. The real zero-friction experience is speaking the person's name and company out loud and having the app log it. That's the natural evolution of the field capture feature.
 
 ---
 

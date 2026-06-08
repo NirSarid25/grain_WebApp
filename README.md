@@ -2,7 +2,8 @@
 
 A full-stack web app that helps Grain's sales team decide which conferences to attend, plan year-round coverage, capture leads in the field, track cross-conference relationships, and sync to HubSpot — all powered by Claude AI.
 
-**Live demo:** https://grainwebapp-production.up.railway.app  
+**LLive Web Application:** https://grainwebapp-production.up.railway.app
+**Video Walkthrough (5-10 Mins):** [Insert your Video Link Here]
 **GitHub:** https://github.com/NirSarid25/grain_WebApp
 
 ---

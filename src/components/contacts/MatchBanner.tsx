@@ -7,7 +7,7 @@ export default function MatchBanner({ name, previousConference }: { name: string
       <div>
         <p className="font-semibold text-amber-900">Existing contact recognized!</p>
         <p className="text-sm text-amber-700">
-          You&apos;ve met <span className="font-medium">{name}</span> before — first encountered at{' '}
+          You&apos;ve met <span className="font-medium">{name}</span> before, first encountered at{' '}
           <span className="font-medium">{previousConference}</span>. Their full relationship history is below.
         </p>
       </div>

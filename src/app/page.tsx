@@ -60,7 +60,7 @@ export default async function DashboardPage() {
           <p className="text-indigo-300 text-xs font-semibold tracking-widest uppercase mb-2">Grain Sales Intelligence</p>
           <h1 className="text-3xl font-bold tracking-tight">Conference Command Center</h1>
           <p className="text-indigo-200 mt-2 text-sm max-w-lg">
-            ICP-scored conferences, relationship tracking across events, and AI-powered follow-up — all in one place for your fintech and payments pipeline.
+            ICP-scored conferences, relationship tracking across events, and AI-powered follow-up. All in one place for your fintech and payments pipeline.
           </p>
           <div className="flex gap-3 mt-5">
             <Link href="/conferences" className="bg-white text-indigo-900 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition-colors">

@@ -43,7 +43,7 @@ export default async function ContactsPage() {
       {hotCount > 0 && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <p className="text-sm font-semibold text-red-800">🔥 {hotCount} hot contact{hotCount !== 1 ? 's' : ''} ready for follow-up</p>
-          <p className="text-xs text-red-600 mt-0.5">Senior decision-makers with email, seen in the last 3 months — act now before the window closes.</p>
+          <p className="text-xs text-red-600 mt-0.5">Senior decision-makers with email, seen in the last 3 months. Act now before the window closes.</p>
         </div>
       )}
 

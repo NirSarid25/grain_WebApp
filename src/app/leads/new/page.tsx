@@ -22,7 +22,7 @@ export default async function NewLeadPage({
         <p className="text-gray-500 text-sm mt-1">
           {preselected
             ? <>At <span className="font-medium text-indigo-600">{preselected.name}</span></>
-            : 'Quick capture — optimized for conference floor use'}
+            : 'Quick capture, optimized for conference floor use'}
         </p>
       </div>
       <LeadCaptureForm conferences={conferences} defaultConferenceId={conferenceId} />

@@ -65,7 +65,7 @@ export default async function PlanningPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Coverage Planning — {year}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Coverage Planning {year}</h1>
         <p className="text-gray-500 text-sm">{conferences.length} conferences · {tierACount} Tier A · {tierBCount} Tier B</p>
       </div>
 
@@ -156,7 +156,7 @@ export default async function PlanningPage() {
 
       {underInvestedMonths.size > 0 && (
         <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-          <p className="text-sm text-orange-700 font-medium">⚡ {underInvestedMonths.size} upcoming month{underInvestedMonths.size !== 1 ? 's' : ''} under-invested — events exist but no Tier A presence: {Array.from(underInvestedMonths).map(m => MONTHS[m]).join(', ')}</p>
+          <p className="text-sm text-orange-700 font-medium">⚡ {underInvestedMonths.size} upcoming month{underInvestedMonths.size !== 1 ? 's' : ''} under-invested: events exist but no Tier A presence: {Array.from(underInvestedMonths).map(m => MONTHS[m]).join(', ')}</p>
           <p className="text-xs text-orange-600 mt-1">Consider whether these months warrant a Tier A event or can be de-prioritized.</p>
         </div>
       )}
@@ -165,7 +165,7 @@ export default async function PlanningPage() {
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <p className="text-sm text-blue-700 font-medium">✈ Trip efficiency opportunities detected</p>
           <p className="text-xs text-blue-600 mt-1">
-            Months marked ✈ have multiple conferences in the same country — one trip can cover multiple events.
+            Months marked ✈ have multiple conferences in the same country. One trip can cover multiple events.
             {Array.from(geoClusterMonths).map(m => {
               const confs = byMonth[m]
               const countryCounts: Record<string, string[]> = {}

@@ -10,17 +10,65 @@ A full-stack web app that helps Grain's sales team decide which conferences to a
 
 ---
 
+## Running Locally
+
+### Prerequisites
+- Node.js 20+
+- Git
+
+### Setup
+
+```bash
+git clone https://github.com/NirSarid/grain_WebApp.git
+cd grain_WebApp
+npm install
+```
+
+Create a `.env` file in the project root:
+
+```env
+DATABASE_URL="file:./dev.db"
+ANTHROPIC_API_KEY="sk-ant-..."
+```
+
+Initialize the database and seed 30 conferences:
+
+```bash
+npx prisma migrate dev --name init
+npm run db:seed
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+### Available scripts
+
+| Script | What it does |
+|--------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run db:seed` | Seed 30 conferences into the database |
+| `npm run db:migrate` | Run database migrations |
+
+---
+
 ## Table of Contents
 
-1. [For Grain Reviewers — Start Here](#for-grain-reviewers--start-here)
-2. [What the App Does](#what-the-app-does)
-3. [Pages & Features](#pages--features)
-4. [ICP Scoring System](#icp-scoring-system)
-5. [Cross-Conference Contact Tracking](#cross-conference-contact-tracking)
-6. [AI Agent Architecture](#ai-agent-architecture)
-7. [How I Built This With AI](#how-i-built-this-with-ai)
-8. [What I'd Build Next](#what-id-build-next)
-9. [Running Locally](#running-locally)
+1. [Running Locally](#running-locally)
+2. [For Grain Reviewers — Start Here](#for-grain-reviewers--start-here)
+3. [What the App Does](#what-the-app-does)
+4. [Pages & Features](#pages--features)
+5. [ICP Scoring System](#icp-scoring-system)
+6. [Cross-Conference Contact Tracking](#cross-conference-contact-tracking)
+7. [AI Agent Architecture](#ai-agent-architecture)
+8. [How I Built This With AI](#how-i-built-this-with-ai)
+9. [What I'd Build Next](#what-id-build-next)
 10. [Tech Stack](#tech-stack)
 
 ---
@@ -276,54 +324,6 @@ If I had another week, three things:
 1. **Team coverage view** — a way for managers to see which rep is covering which conference and avoid overlap. Right now the planning page shows the calendar but not who owns each event.
 2. **HubSpot two-way sync** — before pushing a lead, check if they already exist in HubSpot by email and update instead of creating a duplicate. The current version always creates a new contact.
 3. **Voice capture on the floor** — right now you tap to fill the form. The real zero-friction experience is speaking the person's name and company out loud and having the app log it. That's the natural evolution of the field capture feature.
-
----
-
-## Running Locally
-
-### Prerequisites
-- Node.js 20+
-- Git
-
-### Setup
-
-```bash
-git clone https://github.com/NirSarid25/grain_WebApp.git
-cd grain_WebApp
-npm install
-```
-
-Create a `.env` file in the project root:
-
-```env
-DATABASE_URL="file:./dev.db"
-ANTHROPIC_API_KEY="sk-ant-..."
-```
-
-Initialize the database and seed 30 conferences:
-
-```bash
-npx prisma migrate dev --name init
-npm run db:seed
-```
-
-Start the development server:
-
-```bash
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000).
-
-### Available scripts
-
-| Script | What it does |
-|--------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Production build |
-| `npm run start` | Start production server |
-| `npm run db:seed` | Seed 30 conferences into the database |
-| `npm run db:migrate` | Run database migrations |
 
 ---
 

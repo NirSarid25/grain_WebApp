@@ -40,9 +40,9 @@ const conferences = [
 
 async function main() {
   console.log('Seeding 30 conferences...')
-  await prisma.conference.deleteMany()
   await prisma.lead.deleteMany()
   await prisma.contact.deleteMany()
+  await prisma.conference.deleteMany()
 
   for (const c of conferences) {
     const icpScore = computeScore({
@@ -68,6 +68,136 @@ async function main() {
       },
     })
   }
+
+  console.log('Seeding demo contacts and leads...')
+
+  const fxWeekEurope = await prisma.conference.findFirst({ where: { name: 'FX Week Europe' } })
+  const globalTravelForum = await prisma.conference.findFirst({ where: { name: 'Global Travel Forum' } })
+  const bankex = await prisma.conference.findFirst({ where: { name: 'Bankex' } })
+  const mpe = await prisma.conference.findFirst({ where: { name: 'Merchant Payments Ecosystem (MPE)' } })
+  const payexpo = await prisma.conference.findFirst({ where: { name: 'PayExpo' } })
+  const itbBerlin = await prisma.conference.findFirst({ where: { name: 'ITB Berlin' } })
+  const ifxExpo = await prisma.conference.findFirst({ where: { name: 'iFX EXPO International' } })
+
+  // Alex Cohen — Hot (VP Payments, Stripe, email, seen recently) — 1 lead for deduplication demo
+  const alex = await prisma.contact.create({
+    data: { canonicalName: 'Alex Cohen', email: 'alex.cohen@stripe.com' },
+  })
+  await prisma.lead.create({
+    data: {
+      contactId: alex.id,
+      conferenceId: fxWeekEurope!.id,
+      firstName: 'Alex',
+      lastName: 'Cohen',
+      company: 'Stripe',
+      title: 'VP Payments',
+      email: 'alex.cohen@stripe.com',
+      notes: 'Interested in cross-border FX solutions, asked for a demo',
+      createdAt: new Date('2026-06-08'),
+    },
+  })
+
+  // Sarah Mills — Hot + job change (Adyen → Checkout.com)
+  const sarah = await prisma.contact.create({
+    data: { canonicalName: 'Sarah Mills', email: 'sarah.mills@adyen.com' },
+  })
+  await prisma.lead.create({
+    data: {
+      contactId: sarah.id,
+      conferenceId: globalTravelForum!.id,
+      firstName: 'Sarah',
+      lastName: 'Mills',
+      company: 'Adyen',
+      title: 'Head of Partnerships',
+      email: 'sarah.mills@adyen.com',
+      notes: 'Interested in FX hedging solutions, asked for a follow-up deck',
+      createdAt: new Date('2026-03-03'),
+    },
+  })
+  await prisma.lead.create({
+    data: {
+      contactId: sarah.id,
+      conferenceId: bankex!.id,
+      firstName: 'Sarah',
+      lastName: 'Mills',
+      company: 'Checkout.com',
+      title: 'Director of Partnerships',
+      email: 'sarah.mills@adyen.com',
+      notes: 'Moved to Checkout recently, re-evaluating their currency risk stack',
+      createdAt: new Date('2026-05-13'),
+    },
+  })
+
+  // James Turner — Warming (2 appearances, no email, within 6 months)
+  const james = await prisma.contact.create({
+    data: { canonicalName: 'James Turner', email: null },
+  })
+  await prisma.lead.create({
+    data: {
+      contactId: james.id,
+      conferenceId: mpe!.id,
+      firstName: 'James',
+      lastName: 'Turner',
+      company: 'Revolut',
+      title: 'VP Sales',
+      notes: 'Showed interest but vague on timeline',
+      createdAt: new Date('2026-02-17'),
+    },
+  })
+  await prisma.lead.create({
+    data: {
+      contactId: james.id,
+      conferenceId: bankex!.id,
+      firstName: 'James',
+      lastName: 'Turner',
+      company: 'Revolut',
+      title: 'VP Sales',
+      notes: 'Good conversation, following up after the conference',
+      createdAt: new Date('2026-05-13'),
+    },
+  })
+
+  // David Levy — Tire-kicker (3 appearances, no email)
+  const david = await prisma.contact.create({
+    data: { canonicalName: 'David Levy', email: null },
+  })
+  await prisma.lead.create({
+    data: {
+      contactId: david.id,
+      conferenceId: ifxExpo!.id,
+      firstName: 'David',
+      lastName: 'Levy',
+      company: 'Wise',
+      title: 'Business Development Manager',
+      notes: 'Friendly conversation, no commitment',
+      createdAt: new Date('2026-01-13'),
+    },
+  })
+  await prisma.lead.create({
+    data: {
+      contactId: david.id,
+      conferenceId: itbBerlin!.id,
+      firstName: 'David',
+      lastName: 'Levy',
+      company: 'Wise',
+      title: 'Business Development Manager',
+      notes: 'Met again, still exploring options',
+      createdAt: new Date('2026-03-03'),
+    },
+  })
+  await prisma.lead.create({
+    data: {
+      contactId: david.id,
+      conferenceId: payexpo!.id,
+      firstName: 'David',
+      lastName: 'Levy',
+      company: 'Wise',
+      title: 'Business Development Manager',
+      notes: 'Third time meeting, still no concrete interest',
+      createdAt: new Date('2026-06-10'),
+    },
+  })
+
   console.log('Done.')
 }
 

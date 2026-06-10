@@ -4,7 +4,7 @@ A full-stack web app that helps Grain's sales team decide which conferences to a
 
 **Live Web Application:** https://grainwebapp-production.up.railway.app
 
-**Video Walkthrough:** [Insert Video Link]
+**Video Walkthrough:** https://www.loom.com/share/ab27f64892a64abbb8384590d66f3f50
 
 **GitHub:** https://github.com/NirSarid25/grain_WebApp
 
